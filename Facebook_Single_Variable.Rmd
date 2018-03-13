@@ -1,0 +1,277 @@
+---
+title: "FaceBook"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+getwd()
+list.files()
+pf<-read.csv('pseudo_facebook.tsv',sep='\t')
+
+```
+
+## Including Plots
+
+You can also embed plots, for example histogram of User's Birthdays:
+
+```{r pressure, echo=FALSE}
+install.packages('ggplot2')
+library(ggplot2)
+
+names(pf)
+qplot(x=dob_day,data=pf)+
+  scale_x_continuous(breaks = 1:31)+
+  facet_wrap(~dob_month, ncol=3)
+
+qplot(x=friend_count,data=pf,xlim =c(0,1000))
+
+qplot(x=friend_count, data=pf,binwidth=25)+
+  scale_x_continuous(limits=c(0,1000),breaks = seq(0,1000,50))
+
+ggplot(aes(x = friend_count), data = subset(pf, !is.na(gender))) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50)) +
+  facet_wrap(~gender)
+
+table(pf$gender)
+by(pf$friend_count,pf$gender,summary)
+
+qplot(x=tenure/365,data=pf,binwidth=30,
+      xlab='Number of years using Facebook',
+      ylab='Number of users in sample',
+      color=I('black'),fill=I('#099DD9'))+
+      scale_x_continuous(breaks=seq(1,7,1),limits=c(0,7))
+
+ggplot(aes(x = tenure/365), data = pf)+
+       geom_curve(color='black', fill='#F79420',binwidth= 0.5)+
+       scale_x_discrete(breaks=seq(1,7,1),limits=c(0,7))+
+       xlab('Number of years using Facebook')+
+       ylab('Number of users in sample') 
+
+ggplot(aes(x = tenure), data = pf) +
+  geom_histogram(binwidth = 30, color = 'black', fill = '#099DD9')
+
+ggplot(aes(x = age), data = pf) +
+  geom_histogram(binwidth = 1, fill = '#5760AB') +
+  scale_x_continuous(breaks = seq(0, 113, 10))
+
+install.packages('gridExtra')
+library(gridExtra)
+
+qplot(x=friend_count,data=pf)
+
+summary(pf$friend_count)
+
+summary(log10(pf$friend_count+1))
+
+summary(sqrt(pf$friend_count))
+
+p1 <- qplot(x=friend_count,data=pf)
+p2 <- qplot(x=log10(pf$friend_count+1),data=pf)
+p3 <- qplot(x=sqrt(pf$friend_count),data=pf)
+
+grid.arrange(p1,p2,p3,ncol=1)
+
+```
+
+```{r pressure, echo=FALSE}
+
+p1 <- ggplot(aes(x=friend_count),data=pf)+geom_histogram()
+
+p2<- p1+ scale_x_log10()
+
+p3 <- p1+scale_x_sqrt()
+
+grid.arrange(p1,p2,p3,ncol=1)
+
+logscale <- qplot(x=log10(pf$friend_count),data=pf)
+countscale <- ggplot(aes(x=friend_count),data=pf)+
+  geom_histogram()+
+  scale_x_log10()
+
+grid.arrange(logscale,countscale,ncol=2)
+
+qplot(x=friend_count,data=pf)+
+  scale_x_log10()
+
+```
+
+```{r}
+ggplot(aes(x = friend_count), data = subset(pf, !is.na(gender))) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50)) +
+  facet_wrap(~gender)
+
+qplot(x = friend_count, y=..count../sum(..count..),
+      data = subset(pf, !is.na(gender)),
+      xlab='Friend Count',
+      ylab='Proportion of Users with that friend count',
+      binwidht=10,geom = 'freqpoly',color=gender)+
+    scale_x_continuous(lim = c(0, 1000), breaks = seq(0, 1000, 50))
+
+ggplot(aes(x = friend_count, y = ..count../sum(..count..)),
+       data = subset(pf, !is.na(gender))) +
+  geom_freqpoly(aes(color = gender), binwidth=10) +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 50)) +
+  xlab('Friend Count') +
+  ylab('Proportion of users with that friend count')  
+
+qplot(x = www_likes,
+      data = subset(pf, !is.na(gender)),
+      binwidht=10,geom = 'freqpoly',color=gender)+
+    scale_x_continuous()+
+  scale_x_log10()
+```
+
+```{r}
+by(pf$www_likes,pf$gender,sum)
+```
+## boxplots, quartiles and Friend count 
+```{r} 
+qplot(x=gender, y = friend_count,
+      data = subset(pf, !is.na(gender)),
+      geom='boxplot',ylim=c(0,1000))
+
+qplot(x=gender, y = friend_count,
+      data = subset(pf, !is.na(gender)),
+      geom='boxplot')+
+  scale_y_continuous(limits=c(0,1000))    
+
+qplot(x=gender, y = friend_count,
+      data = subset(pf, !is.na(gender)),
+      geom='boxplot')+
+  coord_cartesian(ylim=c(0,250))
+
+#friend requests solution
+by(pf$friendships_initiated,pf$gender,summary)
+qplot(x=gender, y = friendships_initiated,
+      data = subset(pf, !is.na(gender)),
+      geom='boxplot')+
+  coord_cartesian(ylim=c(0,200 ))
+
+```
+```{r}
+summary(pf$mobile_likes)
+
+summary(pf$mobile_likes>0)
+
+mobile_checkin<- NA
+pf$mobile_checkin <- ifelse(pf$mobile_likes>0,1,0)
+pf$mobile_checkin<-factor(pf$mobile_checkin)
+
+summary(pf$mobile_checkin)
+
+sum(pf$mobile_checkin==1)/length(pf$mobile_checkin)
+
+
+```
+
+```{r}
+data(diamonds)
+summary(diamonds)
+?diamonds
+sum(diamonds$price<500)
+sum(diamonds$price<250)
+sum(diamonds$price>1500)
+
+qplot(x=diamonds$price,data=diamonds,binwidth=1,
+      xlab='price',
+      ylab='count',
+      color=I('black'),fill=I('#099DD9'))+
+      scale_x_continuous(limits=c(500,1000))
+by(diamonds$price,diamonds$cut,summary)
+
+qplot(x = price, data = diamonds) + facet_wrap(~cut)
+
+qplot(x = diamonds$price/diamonds$cut,
+      data = diamonds)+
+
+qplot(x=price/cut, data=diamonds)+ 
+  facet_wrap(~cut)+
+  scale_x_continuous()
+  scale_x_log10()
+  #scale_x_continuous(limits=c(1,1000),breaks = seq(1,1000,50))
+
+ggplot(diamonds) + 
+  geom_histogram(aes(x=price/carat), binwidth =0.05,
+                                  color = "black", fill ="lightblue")+
+  ggtitle("Histogram of Price per Carat, facet by Cut.") + 
+  scale_x_log10() +
+  facet_grid(. ~ cut)  
+```
+
+```{r}
+by(diamonds$price, diamonds$color, summary)
+ggplot(diamonds) + geom_boxplot(aes(x = color,  y = price, fill = color)) + 
+  coord_cartesian(ylim = c(0, 8000)) + 
+  scale_y_continuous(breaks = seq(0,8000,500)) +
+  ggtitle("Diamonds Price by Color.")
+
+by(diamonds$price, diamonds$color, IQR)
+```
+
+```{r}
+ggplot(diamonds) + geom_freqpoly(aes(x = carat), binwidth = 0.02) + 
+  scale_x_continuous(breaks = seq(0,5,0.1)) + 
+  geom_hline(aes(yintercept = 2000),color = "red") + 
+  ggtitle("Carat Frequency Polygon")
+```
+```{r}
+?geom_hline
+```
+```{r}  
+
+install.packages("lubridate")
+library(lubridate)
+
+birthdays <- read.csv("birthdaysExample.csv")
+birthdays$dates <- mdy(birthdays$dates)
+birthdays$month <- month(birthdays$dates)
+birthdays$day <- day(birthdays$dates)
+
+#some basic analysis
+summary(birthdays)
+table(birthdays$month)
+table(birthdays$day)
+
+#ppl share my birth day
+# July, 12th
+july.twelth <- subset(birthdays, month == 07 & day == 12)
+nrow(july.twelth)
+
+# which month contains mosth number of birthdays?
+ggplot(birthdays) + geom_histogram(aes(x = month),
+                                   color = I('black'),
+                                   fill = I('#099DD9'),
+                                   binwidth = 1) +
+  scale_y_discrete() +
+  scale_x_discrete() + 
+  ggtitle("Birthdays per Month")
+
+#how many birthday in each month
+table(birthdays$month)
+
+#which day of the year has the most number of birthdays
+ggplot(birthdays) + geom_histogram(aes(x = day),
+                                   color = I('black'),
+                                   fill = I('#099DD9'),
+                                   binwidth = 1) +
+  scale_y_discrete() +
+  scale_x_continuous() + 
+  ggtitle("Birthdays per Day")
+
+length(unique(birthdays$dates))
+# There are 348 different dates so the answer is no
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
